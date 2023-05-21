@@ -44,6 +44,13 @@ NPCs(0)\name$ = "John"
 ; optimize collision: only check if bounding boxes overlap, only if they do repeat check more granularly
 ; Flip(False) ; awesome hack from some dude online, turns off 60fps cap
 
+; TODO make coordinates relative, so the game would technically be scalable
+
+; apparently it's not possible to make Global Constants, so here we go
+Const RECHTS = 1
+Const UNTEN = 2
+Const LINKS = 3
+
 Global x=300 
 Global y=300 
 Global playerBoxX Global playerBoxY
@@ -53,7 +60,7 @@ Global playerBoxHeight = 30
 Global playerMovementX = 0 Global playerMovementY = 0
 Global speed = 3
 
-map = LoadImage("map001.bmp")
+Global map = LoadImage("map001.bmp")
 MaskImage map, 255, 255, 255 ; make white transparent instead of black
 
 Global playerImage = LoadImage("player.bmp")
@@ -98,9 +105,15 @@ Repeat
 	; If collide or out of bounds, move player back to pre-collision
 	; Or - and hear me out - we could just draw a frame and leave holes in it and whenever the player leaves
 		; bounds we know he's entering another map
+	; TODO draw the maps out fully and then start deleting to create "sub" maps.
+		; collision map >> delete "walkable" objects like grass, stools, walkways, ...
+		; event map >> delete everything that can't interact (leaving maybe only characters)
+		; basically create layers by deleting from the original "graphic"
 	If ImageRectCollide (map,0,0,0,playerBoxX,playerBoxY,playerBoxWidth ,playerBoxHeight ) Then
 		UndoMovePlayer()
 	EndIf	
+	
+	CheckEvents()
 
 Until KeyDown(1) = 1
 
@@ -118,6 +131,36 @@ End
 
 ; possible subroutines come here, after End
 
+
+Function CheckEvents()
+	If x > 640 Then
+		Stop
+		LoadMap(RECHTS)
+		x = 20
+	Else If x < 0 Then
+		LoadMap(LINKS)
+		x = 620
+	Else If y > 480 Then
+		LoadMap(UNTEN)	
+		y = 20			
+	EndIf
+End Function
+
+; TODO make it actually into a map system, but for now we don't need it that badly
+Function LoadMap(direction)
+	If direction = RECHTS Then
+		map = LoadImage("map002.bmp"); of course this is hardcoded, so needs to be replaced with a more dynamic map system
+		MaskImage map, 255, 255, 255 ; make white transparent instead of black
+	EndIf
+	If direction = UNTEN Then
+		map = LoadImage("map003.bmp"); of course this is hardcoded, so needs to be replaced with a more dynamic map system
+		MaskImage map, 255, 255, 255 ; make white transparent instead of black
+	EndIf	
+	If direction = LINKS Then
+		map = LoadImage("map004.bmp"); of course this is hardcoded, so needs to be replaced with a more dynamic map system
+		MaskImage map, 255, 255, 255 ; make white transparent instead of black
+	EndIf		
+End Function
 
 Function DrawPlayer()
 	RotatePlayerImage()
