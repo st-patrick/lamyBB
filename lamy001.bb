@@ -36,7 +36,7 @@ NPCs(0)\name$ = "John"
 
 ; GRAFIKBEFEHLE
 
-; DrawBlock, TileBlock, CopyImage: Diese befehle arbeiten etwas schneller als Image-Befehle, weil sie den ursprï¿½nglichen Hintergrund nicht erhalten mï¿½ssen
+; DrawBlock, TileBlock, CopyImage: Diese befehle arbeiten etwas schneller als Image-Befehle, weil sie den ursprünglichen Hintergrund nicht erhalten müssen
 ; SaveImage, SaveBuffer
 ; ViewPort, Origin
 ; Text = Grafikmodus anstatt Print
@@ -48,10 +48,11 @@ Global x=300
 Global y=300 
 Global playerBoxWidth = 30
 Global playerBoxHeight = 15 
-;Global playerTurned = 0 ; how many degrees the player is turned, starting with 0 being "12 oclock"
+Global playerTurned = -90 ; how many degrees the player is turned, starting with 0 being "12 oclock"
 playerMovementX = 0 playerMovementY = 0 speed = 3
+Global playerTurnDeg = 0
 
-map = LoadImage("map001.bmp")
+Global map = LoadImage("map001.bmp")
 MaskImage map, 255, 255, 255 ; make white transparent instead of black
 
 Global playerImage = LoadImage("player.bmp")
@@ -68,23 +69,42 @@ Repeat
 	DrawPlayer()
 	Flip()
 	
-	playerMovementX = 0 playerMovementY = 0
+	
+	
+	playerMovementX = 0 playerMovementY = 0 playerTurnDeg = 0
+	move = False
+	speed = 3
+	
+	If KeyDown(200) = 1 Then move = True
+	If KeyDown(208) = 1 Then 
+		speed = -1 * speed
+		move = True
+	EndIf
+	If KeyDown(205) = 1 Then playerTurnDeg = +2; degrees go ccw so if I turn right (CW), I subtract 1
+	If KeyDown(203) = 1 Then playerTurnDeg = -2
+	
+	playerTurned = playerTurned + playerTurnDeg
+	playerTurned = playerTurned Mod 360
 
+
+	; determine direction vector and  x and y components of said vector
+	xv# = speed * Cos( playerTurned ) ; (x,y) is a point on the circle 
+	yv# = speed * Sin( playerTurned  ) ; corresponding to angle a. 		
+
+	If move Then
+		x = x + xv#
+		y = y + yv# 
+		
+		; If collide, move player back to pre-collision
+		If ImageRectCollide (map,0,0,0,x,y,playerBoxWidth ,playerBoxHeight ) Then
+			x = x - xv#
+			y = y - yv#
+		EndIf	
+			
+		
+	EndIf
 	
-	If KeyDown(200) = 1 Then playerMovementY = -speed
-	If KeyDown(208) = 1 Then playerMovementY = speed
-	If KeyDown(205) = 1 Then playerMovementX = speed
-	If KeyDown(203) = 1 Then playerMovementX = -speed
-	
-	x = x + playerMovementX
-	y = y + playerMovementY 
-	
-	; If collide, move player back to pre-collision
-	If ImageRectCollide (map,0,0,0,x,y,playerBoxWidth ,playerBoxHeight ) Then
-		x = x - playerMovementX
-		y = y - playerMovementY 
-	EndIf	
-	
+
 
 Until KeyDown(1) = 1
 
@@ -107,6 +127,13 @@ End
 Function DrawPlayer()
 	
 	DrawImage playerImage, x, y
+	
+	; so fine-rotating the image isn't working and we will probably need rotation for other things too. Options:
+	; 1) if you look at most olden games they don't have rotation unless 90deg. Although GTA2 does.
+	; 2) use the 3D engine with sprites >> but we can't use pixel perfect overlap on sprites.
+	; 3) use BlitzMax with a possibly better SetRotation command >> I hate the blitzmax-ng syntax. Looks a lot like C++
+	; chose optione 1)
+	
 End Function
 
 Data "Alien", 20, 39, 4.5
