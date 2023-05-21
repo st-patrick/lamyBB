@@ -36,7 +36,7 @@ NPCs(0)\name$ = "John"
 
 ; GRAFIKBEFEHLE
 
-; DrawBlock, TileBlock, CopyImage: Diese befehle arbeiten etwas schneller als Image-Befehle, weil sie den ursprünglichen Hintergrund nicht erhalten müssen
+; DrawBlock, TileBlock, CopyImage: Diese befehle arbeiten etwas schneller als Image-Befehle, weil sie den ursprï¿½nglichen Hintergrund nicht erhalten mï¿½ssen
 ; SaveImage, SaveBuffer
 ; ViewPort, Origin
 ; Text = Grafikmodus anstatt Print
@@ -53,6 +53,11 @@ playerMovementX = 0 playerMovementY = 0 speed = 3
 
 map = LoadImage("map001.bmp")
 MaskImage map, 255, 255, 255 ; make white transparent instead of black
+
+Global playerImage = LoadImage("player.bmp")
+MaskImage playerImage, 255, 255, 255 ; make white transparent instead of black
+
+
 Color 0,0,0
 ClsColor 255, 255, 255
 
@@ -100,8 +105,8 @@ End
 
 
 Function DrawPlayer()
-	Oval x, y, playerBoxWidth ,playerBoxHeight, 0
-	Oval x + 7, y, playerBoxWidth - 14 ,playerBoxHeight, 0	
+	
+	DrawImage playerImage, x, y
 End Function
 
 Data "Alien", 20, 39, 4.5
