@@ -1,4 +1,4 @@
-; Include "other stuff.bb"
+Include "maps.bb"
 
 
 ; SETUP
@@ -13,6 +13,10 @@ inty% = 3
 stringy$ = "You wake up drenched in sweat in your bed"
 
 
+
+; ok so the problems with custom types is that they all live in the same list
+; so if I want to be able to seperate them without having to go through globally ALL instances of the same type
+; I will need to rather use Dims or so
 Type NPC
 	Field name$
 	Field image
@@ -20,11 +24,35 @@ Type NPC
 	Field states ; first meeting is state 0, etc...
 End Type
 
-;Global mine.MyType Dim all_mine.MyType( 100 ) 
-Dim NPCs.NPC(100)
 
+Type EventArea
+	Field name$
+	Field x
+	Field y
+	Field width
+	Field height
+	Field e.Event
+	Field enabled ; first meeting is state 0, etc...
+End Type
+
+Type Event
+	Field name$
+	Field ea.EventArea
+	Field enabled ; first meeting is state 0, etc...
+End Type
+ 
+Dim NPCs.NPC(100) ;the dot means something entirely different here than in other languages
+					; basically the dot means "of Type ..."
 NPCs(0) = New NPC
 NPCs(0)\name$ = "John"
+
+Dim EventAreas.EventArea(100)
+EventAreas(0) = New EventArea
+EventAreas(0)\name$ = "Talk to the barkeeper"
+EventAreas(0)\x = "Talk to the barkeeper"
+EventAreas(0)\y = "Talk to the barkeeper"
+EventAreas(0)\width = "Talk to the barkeeper"
+
 
 
 ; Start
@@ -82,6 +110,8 @@ Repeat
 	playerMovementX = 0 playerMovementY = 0
 	prevPlayerRotation = currPlayerRotation
 	
+	; TODO maybe using TFormFilter mixed with a buffer that we draw to every time and rotate from "base image"
+		; could enable a nice GTA2 like movement
 	If KeyDown(200) = 1 Then ; UP
 		playerMovementY = -speed
 		currPlayerRotation = 0
@@ -109,6 +139,8 @@ Repeat
 		; collision map >> delete "walkable" objects like grass, stools, walkways, ...
 		; event map >> delete everything that can't interact (leaving maybe only characters)
 		; basically create layers by deleting from the original "graphic"
+		; OR
+		; use something fancy like Gimp to layer them and then export all layers into individual files
 	If ImageRectCollide (map,0,0,0,playerBoxX,playerBoxY,playerBoxWidth ,playerBoxHeight ) Then
 		UndoMovePlayer()
 	EndIf	
@@ -133,6 +165,20 @@ End
 
 
 Function CheckEvents()
+
+; ok NOW we want to be able to talk to people
+; options
+; simple event system like RPG maker. If you stand in area x, then you can do y
+	; options
+	; draw events in other colors in paint
+		; but then how to "remove" those colors again?
+			; do now, worry later?
+			; problem is, I can't detect overlap of different colors. 
+				; so it would make more sense to have layers because I can detect it then if it's a seperate image
+	; just write coordinates in code and have a "debug mode" where it shows those areas in different colors
+		; yeah I like that better
+		; that would probably be a custom type "eventArea"
+			; ALTHOUGH then I'll need to use rectangular areas or so
 	If x > 640 Then
 		Stop
 		LoadMap(RECHTS)
