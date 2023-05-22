@@ -1,57 +1,24 @@
 ; SETUP
-Graphics 640,480 ; Graphics command HAS to come first for (following) LoadImage to function
+Graphics 700,500 ; Graphics command HAS to come first for (following) LoadImage to function
 
+Include "typedefs.bb"
+; TODO why cant I do this;;; Include "functions.bb"
 Include "maps.bb"
+Include "events.bb"
+Include "playermovement.bb"
+
 
 
 AppTitle "The Legend of Lamy"
 SetBuffer BackBuffer()
 
-Global StoryState = 0, Inventory = 0
 
-inty% = 3
-stringy$ = "You wake up drenched in sweat in your bed"
-
-
-
-; ok so the problems with custom types is that they all live in the same list
-; so if I want to be able to seperate them without having to go through globally ALL instances of the same type
-; I will need to rather use Dims or so
-Type NPC
-	Field name$
-	Field image
-	Field position
-	Field states ; first meeting is state 0, etc...
-End Type
-
-
-Type EventArea
-	Field name$
-	Field x
-	Field y
-	Field width
-	Field height
-	Field e.Event
-	Field enabled ; first meeting is state 0, etc...
-End Type
-
-Type Event
-	Field name$
-	Field ea.EventArea
-	Field enabled ; first meeting is state 0, etc...
-End Type
  
 Dim NPCs.NPC(100) ;the dot means something entirely different here than in other languages
 					; basically the dot means "of Type ..."
 NPCs(0) = New NPC
 NPCs(0)\name$ = "John"
 
-Dim EventAreas.EventArea(100)
-EventAreas(0) = New EventArea
-EventAreas(0)\name$ = "Talk to the barkeeper"
-EventAreas(0)\x = "Talk to the barkeeper"
-EventAreas(0)\y = "Talk to the barkeeper"
-EventAreas(0)\width = "Talk to the barkeeper"
 
 
 
@@ -68,8 +35,7 @@ Const RECHTS = 1
 Const UNTEN = 2
 Const LINKS = 3
 
-Global x=300 
-Global y=300 
+
 Global playerBoxX Global playerBoxY
 Global playerBoxWidth = 30
 Global playerBoxHeight = 30
@@ -79,46 +45,37 @@ Global speed = 3
 
 ; SPAWN where?
 Global map.Map = home ; start on home map for now
+Global x=215
+Global y=150 
+Global prevPlayerRotation = 0 Global currPlayerRotation = 0
+
+;Global map.Map = bar ; start on home map for now
+;Global x=450 
+;Global y=250 
+
+
+
 
 Global playerImage = LoadImage("player.bmp")
 MaskImage playerImage, 255, 255, 255 ; make white transparent instead of black
-Global prevPlayerRotation Global currPlayerRotation
+
 HandleImage playerImage, 15, 7 ; set handle to center cause of rotation n stuff
 
 Color 0,0,0
 ClsColor 255, 255, 255
 
+Global DebugMode = True
+
 
 Repeat
 
+	;If map = road Then Stop
+
 	Cls
 	DrawImage map\bild, 0, 0
-	DrawPlayer()
-	; FOR DEBUGGING: draw collision box: Rect playerBoxX, playerBoxY, playerBoxWidth, playerBoxHeight, 0
-	Flip()
+
 	
-	playerMovementX = 0 playerMovementY = 0
-	prevPlayerRotation = currPlayerRotation
-	
-	; TODO maybe using TFormFilter mixed with a buffer that we draw to every time and rotate from "base image"
-		; could enable a nice GTA2 like movement
-	If KeyDown(200) = 1 Then ; UP
-		playerMovementY = -speed
-		currPlayerRotation = 0
-	EndIf
-	If KeyDown(208) = 1 Then ; DOWN
-		playerMovementY = speed
-		currPlayerRotation = 180
-	EndIf
-	If KeyDown(205) = 1 Then ; RIGHT
-		playerMovementX = speed
-		currPlayerRotation = 90
-	EndIf
-	If KeyDown(203) = 1 Then ; LEFT
-		playerMovementX = -speed
-		currPlayerRotation = -90
-	EndIf
-	
+	GetPlayerMovement()	
 	MovePlayer()
 	; TODO add sound effect to walking... like footsteps
 	
@@ -137,24 +94,46 @@ Repeat
 	EndIf	
 	
 	CheckEvents()
+	
+	DrawPlayer()
+	; FOR DEBUGGING: draw collision box: Rect playerBoxX, playerBoxY, playerBoxWidth, playerBoxHeight, 0
+	If DebugMode Then DebugDraw()
+	Flip()
 
 Until KeyDown(1) = 1
-
-
-
-
-
-
-; crates endless loop Goto label
-
-
-WaitKey
 End
 
 
-; possible subroutines come here, after End
 
 
+
+
+
+
+; Function Defs
+
+Function DebugDraw()
+	Color 255,0,0
+	
+	; TODO loop through event list total or "local" map event dim if we ever create one
+	For i = 0 To 3
+		If EventAreas(i)\map = map Then
+			Rect EventAreas(i)\x, EventAreas(i)\y, EventAreas(i)\width, EventAreas(i)\height, 0
+			Text EventAreas(i)\x, EventAreas(i)\y, EventAreas(i)\name$
+		EndIf
+	Next
+	
+	; show player bounding box
+	Rect playerBoxX, playerBoxY, playerBoxWidth, playerBoxHeight, 0
+	
+	; show mouse position for easier coordinate setting
+	Text 0,0, "Pos: " + MouseX() + ", " + MouseY()
+	
+	Color 0,0,0
+End Function
+
+
+; TODO maybe replace with a color based system? That way events can be drawn right into map and correlated by color hex code /rgb
 Function CheckEvents()
 
 ; ok NOW we want to be able to talk to people
@@ -170,19 +149,20 @@ Function CheckEvents()
 		; yeah I like that better
 		; that would probably be a custom type "eventArea"
 			; ALTHOUGH then I'll need to use rectangular areas or so
-	If x > 640 Then
-		map = map\rechts
-		x = 20
-	Else If x < 0 Then
-		map = map\links
-		x = 620
-	Else If y > 480 Then
-		map = map\unten	
-		y = 20		
-	Else If y < 0 Then
-		map = map\oben	
-		y = 620			
+	HandleExits()
+	
+	; user is trying to interact, so let's check if he's in an event area
+	If KeyDown(28) Then
+		; TODO loop through event list total or "local" map event dim if we ever create one
+		For i = 0 To 3
+			If RectsOverlap(playerBoxX, playerBoxY, playerBoxWidth, playerBoxHeight,   EventAreas(i)\x, EventAreas(i)\y, EventAreas(i)\width, EventAreas(i)\height) Then
+				Text 50,400, EventAreas(i)\e\dialogue$
+				WaitKey
+			EndIf	
+		Next
 	EndIf
+	
+	
 End Function
 
 
@@ -191,35 +171,10 @@ Function DrawPlayer()
 	DrawImage playerImage, x, y
 End Function
 
-Function MovePlayer()
-	x = x + playerMovementX
-	y = y + playerMovementY 
-	UpdatePlayerBox()
-End Function
-
-Function UndoMovePlayer()
-	x = x - playerMovementX
-	y = y - playerMovementY 
-	UpdatePlayerBox()
-End Function
 
 Function RotatePlayerImage()
 	RotateImage playerImage, prevPlayerRotation - currPlayerRotation
 End Function
 
-Function UpdatePlayerBox()
-	If currPlayerRotation = 90 Or currPlayerRotation = -90 Then
-		offsetX = -15 ; fuck it, let's just have a square bounding box
-		offsetY = -15
-	Else
-		offsetX = -15
-		offsetY = -15
-	EndIf 
-
-	playerBoxX = x + offsetX
-	playerBoxY = y + offsetY
-End Function
 
 
-Data "Alien", 20, 39, 4.5
-; did I use data back then? looks helpful, especially in other files so I can just import instead of readfile etc.
