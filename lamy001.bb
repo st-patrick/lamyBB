@@ -6,6 +6,7 @@ Include "typedefs.bb"
 Include "maps.bb"
 Include "events.bb"
 Include "playermovement.bb"
+Include "helpers.bb"
 
 
 
@@ -44,8 +45,8 @@ Global playerMovementX = 0 Global playerMovementY = 0
 Global speed = 3
 
 ; SPAWN where?
-Global map.Map = home ; start on home map for now
-Global x=215
+Global map.Map = road ; start on home map for now
+Global x=250
 Global y=150 
 Global prevPlayerRotation = 0 Global currPlayerRotation = 0
 
@@ -156,8 +157,7 @@ Function CheckEvents()
 		; TODO loop through event list total or "local" map event dim if we ever create one
 		For i = 0 To 3
 			If RectsOverlap(playerBoxX, playerBoxY, playerBoxWidth, playerBoxHeight,   EventAreas(i)\x, EventAreas(i)\y, EventAreas(i)\width, EventAreas(i)\height) Then
-				Text 50,400, EventAreas(i)\e\dialogue$
-				WaitKey
+				ShowDialogue(EventAreas(i)\e)
 			EndIf	
 		Next
 	EndIf
