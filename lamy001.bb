@@ -1,9 +1,9 @@
+; SETUP
+Graphics 640,480 ; Graphics command HAS to come first for (following) LoadImage to function
+
 Include "maps.bb"
 
 
-; SETUP
-
-Graphics 640,480
 AppTitle "The Legend of Lamy"
 SetBuffer BackBuffer()
 
@@ -57,20 +57,9 @@ EventAreas(0)\width = "Talk to the barkeeper"
 
 ; Start
 
-; Name$ = Input$("Geben Sie Ihren Namen ein: ")
-
-.label
-
 
 ; GRAFIKBEFEHLE
 
-; DrawBlock, TileBlock, CopyImage: Diese befehle arbeiten etwas schneller als Image-Befehle, weil sie den urspr�nglichen Hintergrund nicht erhalten m�ssen
-; SaveImage, SaveBuffer
-; ViewPort, Origin
-; Text = Grafikmodus anstatt Print
-; CreateBank Speicherbaenke fuer andere grosse dateien, um sie zuerst in den Arbeitsspeicher zu laden und dann erst schritt fuer schritt auszulesen, e.g. leveldateien, ...
-; optimize collision: only check if bounding boxes overlap, only if they do repeat check more granularly
-; Flip(False) ; awesome hack from some dude online, turns off 60fps cap
 
 ; TODO make coordinates relative, so the game would technically be scalable
 
@@ -88,8 +77,8 @@ Global playerBoxHeight = 30
 Global playerMovementX = 0 Global playerMovementY = 0
 Global speed = 3
 
-Global map = LoadImage("map001.bmp")
-MaskImage map, 255, 255, 255 ; make white transparent instead of black
+; SPAWN where?
+Global map.Map = home ; start on home map for now
 
 Global playerImage = LoadImage("player.bmp")
 MaskImage playerImage, 255, 255, 255 ; make white transparent instead of black
@@ -99,10 +88,11 @@ HandleImage playerImage, 15, 7 ; set handle to center cause of rotation n stuff
 Color 0,0,0
 ClsColor 255, 255, 255
 
+
 Repeat
 
 	Cls
-	DrawImage map, 0, 0
+	DrawImage map\bild, 0, 0
 	DrawPlayer()
 	; FOR DEBUGGING: draw collision box: Rect playerBoxX, playerBoxY, playerBoxWidth, playerBoxHeight, 0
 	Flip()
@@ -130,6 +120,7 @@ Repeat
 	EndIf
 	
 	MovePlayer()
+	; TODO add sound effect to walking... like footsteps
 	
 	
 	; If collide or out of bounds, move player back to pre-collision
@@ -141,7 +132,7 @@ Repeat
 		; basically create layers by deleting from the original "graphic"
 		; OR
 		; use something fancy like Gimp to layer them and then export all layers into individual files
-	If ImageRectCollide (map,0,0,0,playerBoxX,playerBoxY,playerBoxWidth ,playerBoxHeight ) Then
+	If ImageRectCollide (map\bild,0,0,0,playerBoxX,playerBoxY,playerBoxWidth ,playerBoxHeight ) Then
 		UndoMovePlayer()
 	EndIf	
 	
@@ -180,33 +171,20 @@ Function CheckEvents()
 		; that would probably be a custom type "eventArea"
 			; ALTHOUGH then I'll need to use rectangular areas or so
 	If x > 640 Then
-		Stop
-		LoadMap(RECHTS)
+		map = map\rechts
 		x = 20
 	Else If x < 0 Then
-		LoadMap(LINKS)
+		map = map\links
 		x = 620
 	Else If y > 480 Then
-		LoadMap(UNTEN)	
-		y = 20			
+		map = map\unten	
+		y = 20		
+	Else If y < 0 Then
+		map = map\oben	
+		y = 620			
 	EndIf
 End Function
 
-; TODO make it actually into a map system, but for now we don't need it that badly
-Function LoadMap(direction)
-	If direction = RECHTS Then
-		map = LoadImage("map002.bmp"); of course this is hardcoded, so needs to be replaced with a more dynamic map system
-		MaskImage map, 255, 255, 255 ; make white transparent instead of black
-	EndIf
-	If direction = UNTEN Then
-		map = LoadImage("map003.bmp"); of course this is hardcoded, so needs to be replaced with a more dynamic map system
-		MaskImage map, 255, 255, 255 ; make white transparent instead of black
-	EndIf	
-	If direction = LINKS Then
-		map = LoadImage("map004.bmp"); of course this is hardcoded, so needs to be replaced with a more dynamic map system
-		MaskImage map, 255, 255, 255 ; make white transparent instead of black
-	EndIf		
-End Function
 
 Function DrawPlayer()
 	RotatePlayerImage()
