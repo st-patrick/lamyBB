@@ -45,15 +45,10 @@ Global playerMovementX = 0 Global playerMovementY = 0
 Global speed = 3
 
 ; SPAWN where?
-Global map.Map = road ; start on home map for now
+Global map.Map = bar ; start on home map for now
 Global x=250
-Global y=150 
+Global y=250 
 Global prevPlayerRotation = 0 Global currPlayerRotation = 0
-
-;Global map.Map = bar ; start on home map for now
-;Global x=450 
-;Global y=250 
-
 
 
 
@@ -73,9 +68,9 @@ Repeat
 	;If map = road Then Stop
 
 	Cls
-	DrawImage map\bild, 0, 0
-
 	
+	RenderMap(map)
+
 	GetPlayerMovement()	
 	MovePlayer()
 	; TODO add sound effect to walking... like footsteps
@@ -90,15 +85,16 @@ Repeat
 		; basically create layers by deleting from the original "graphic"
 		; OR
 		; use something fancy like Gimp to layer them and then export all layers into individual files
-	If ImageRectCollide (map\bild,0,0,0,playerBoxX,playerBoxY,playerBoxWidth ,playerBoxHeight ) Then
+	If PlayerCollidingWith(map) Then
 		UndoMovePlayer()
 	EndIf	
-	
-	CheckEvents()
 	
 	DrawPlayer()
 	; FOR DEBUGGING: draw collision box: Rect playerBoxX, playerBoxY, playerBoxWidth, playerBoxHeight, 0
 	If DebugMode Then DebugDraw()
+	
+	CheckEvents() ; because we want the dialogue boxes to be displayed above debug boxes n stuff
+	
 	Flip()
 
 Until KeyDown(1) = 1
@@ -117,10 +113,12 @@ Function DebugDraw()
 	Color 255,0,0
 	
 	; TODO loop through event list total or "local" map event dim if we ever create one
-	For i = 0 To 3
-		If EventAreas(i)\map = map Then
-			Rect EventAreas(i)\x, EventAreas(i)\y, EventAreas(i)\width, EventAreas(i)\height, 0
-			Text EventAreas(i)\x, EventAreas(i)\y, EventAreas(i)\name$
+	For i = 0 To 10
+		If map\EventAreas[i] <> Null Then
+			Rect map\EventAreas[i]\x, map\EventAreas[i]\y, map\EventAreas[i]\width, map\EventAreas[i]\height, 0
+			Text map\EventAreas[i]\x, map\EventAreas[i]\y, map\EventAreas[i]\name$
+		Else
+			Exit
 		EndIf
 	Next
 	
@@ -155,10 +153,12 @@ Function CheckEvents()
 	; user is trying to interact, so let's check if he's in an event area
 	If KeyDown(28) Then
 		; TODO loop through event list total or "local" map event dim if we ever create one
-		For i = 0 To 3
-			If RectsOverlap(playerBoxX, playerBoxY, playerBoxWidth, playerBoxHeight,   EventAreas(i)\x, EventAreas(i)\y, EventAreas(i)\width, EventAreas(i)\height) Then
-				ShowDialogue(EventAreas(i)\e)
-			EndIf	
+		For i = 0 To 10 ; TODO obviously this should be a more dynamic size... though I don't think that's possible in BB
+			If map\EventAreas[i] <> Null Then
+				If RectsOverlap(playerBoxX, playerBoxY, playerBoxWidth, playerBoxHeight,   map\EventAreas[i]\x, map\EventAreas[i]\y, map\EventAreas[i]\width, map\EventAreas[i]\height) Then
+					ShowDialogue(map\EventAreas[i]\e)
+				EndIf	
+			EndIf				
 		Next
 	EndIf
 	
@@ -175,6 +175,5 @@ End Function
 Function RotatePlayerImage()
 	RotateImage playerImage, prevPlayerRotation - currPlayerRotation
 End Function
-
 
 

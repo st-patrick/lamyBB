@@ -18,10 +18,16 @@ Type EventArea
 	Field map.Map
 	Field enabled ; first meeting is state 0, etc...
 End Type
+Dim EventAreas.EventArea(100)
 
 Type Event
 	Field name$
 	Field ea.EventArea
 	Field dialogue$
 	Field enabled ; first meeting is state 0, etc...
+End Type
+
+Type Door
+	Field hingeX, hingeY
+	Field opened
 End Type

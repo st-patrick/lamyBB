@@ -13,6 +13,8 @@ Type Map
 	Field unten.Map
 	Field oben.Map
 	Field spawnX
+	Field doors.Door[1]
+	Field EventAreas.EventArea[10]
 	; TODO something like this: Field Dim events.Event(10)
 End Type
 
@@ -34,10 +36,18 @@ neighborhood.Map = New Map
 neighborhood\bild= LoadImage("map003.bmp")
 MaskImage neighborhood\bild, 255, 255, 255 ; make white transparent instead of black
 
-bar.Map = New Map
-bar\bild= LoadImage("map004.bmp")
-MaskImage bar\bild, 255, 255, 255 ; make white transparent instead of black
-bar\spawnX = 650
+Include "map_bar.bb"
+
+
+; DOORS
+
+bar\doors[0] = New Door
+bar\doors[0]\hingeX = 525
+bar\doors[0]\hingeY = 205
+
+
+
+
 
 road.Map = New Map
 road\bild= LoadImage("map005.bmp")
@@ -65,6 +75,23 @@ road\oben = bar
 
 
 
+; ======== content ===========
+
+
+Function RenderMap(map.Map)
+	DrawImage map\bild, 0, 0
+	
+	Color 0,255,0
+	counter = 0
+	While (map\doors[counter] <> Null)
+		Rect map\doors[counter]\hingeX, map\doors[counter]\hingeY, 50, 8
+		counter = counter + 1
+	Wend
+	Color 0,0,0
+	
+End Function
+
+
 Function HandleExits()
 	If x > 700 Then
 		map = map\rechts
@@ -81,4 +108,17 @@ Function HandleExits()
 		y = 480		
 		If map\spawnX > 0 Then x = map\spawnX	
 	EndIf
+End Function
+
+Function PlayerCollidingWith(map.Map)
+	isCollidingWithBaseImage = ImageRectCollide (map\bild,0,0,0,playerBoxX,playerBoxY,playerBoxWidth ,playerBoxHeight )
+	
+	counter = 0
+	isCollidingWithDoor = False
+	While (map\doors[counter] <> Null)
+		isCollidingWithDoor = isCollidingWithDoor Or RectsOverlap(map\doors[counter]\hingeX, map\doors[counter]\hingeY, 50, 8, playerBoxX,playerBoxY,playerBoxWidth ,playerBoxHeight)
+		counter = counter + 1
+	Wend
+	
+	Return isCollidingWithBaseImage Or isCollidingWithDoor 
 End Function
