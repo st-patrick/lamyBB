@@ -11,6 +11,8 @@ bar\doors[0]\hingeX = 525
 bar\doors[0]\hingeY = 205
 
 
+; EVENTS
+
 bar\EventAreas[0] = New EventArea
 bar\EventAreas[0]\name$ = "Talk to the barkeeper"
 bar\EventAreas[0]\x = 500 ; TODO show mouse pointer position in pixel for easy event creation

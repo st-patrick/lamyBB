@@ -7,12 +7,14 @@ Data "Alien", 20, 39, 4.5
 ; this would also allow use to easily have a "overview" for debugging, where maps are shown glued together
 ; and zoomed out
 Type Map
-	Field bild
-	Field links.Map
-	Field rechts.Map
-	Field unten.Map
-	Field oben.Map
-	Field spawnX
+	Field bild ; the LoadImage resource
+	Field bildDecoration ; a LoadImage resource that will be displayed but not collide
+	Field links.Map ;the Map to the left of this map
+	Field rechts.Map  ; the Map to the right of this map
+	Field unten.Map  ; the Map to the bottom of this map
+	Field oben.Map ; the Map to the top of this map
+	Field spawnX ; If this is set, when going to another top or bottom map, player will spawn at this x coordinate
+	Field spawnY ; same as SpawnX but with Y axis and left or right map
 	Field doors.Door[1]
 	Field EventAreas.EventArea[10]
 	; TODO something like this: Field Dim events.Event(10)
@@ -23,10 +25,6 @@ End Type
 	; 1) have a continuous map where you just move around, so the "camera" only shows you a certain perspective
 		; but the map itself doesn't have fixed ratio or anything like that
 
-; for now use variables but in the long run, prob necessary to organize maps better... by name or what not
-home.Map = New Map
-home\bild= LoadImage("map001.bmp")
-MaskImage home\bild, 255, 255, 255 ; make white transparent instead of black
 
 blank.Map = New Map
 blank\bild= LoadImage("map002.bmp")
@@ -37,6 +35,7 @@ neighborhood\bild= LoadImage("map003.bmp")
 MaskImage neighborhood\bild, 255, 255, 255 ; make white transparent instead of black
 
 Include "map_bar.bb"
+Include "map_home.bb"
 
 
 ; DOORS
@@ -80,6 +79,9 @@ road\oben = bar
 
 Function RenderMap(map.Map)
 	DrawImage map\bild, 0, 0
+	If map\bildDecoration <> 0 Then 
+		DrawImage map\bildDecoration, 0, 0
+	EndIf
 	
 	Color 0,255,0
 	counter = 0

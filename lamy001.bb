@@ -45,9 +45,9 @@ Global playerMovementX = 0 Global playerMovementY = 0
 Global speed = 3
 
 ; SPAWN where?
-Global map.Map = bar ; start on home map for now
+Global map.Map = home ; start on home map for now
 Global x=250
-Global y=250 
+Global y=300 
 Global prevPlayerRotation = 0 Global currPlayerRotation = 0
 
 
@@ -175,5 +175,4 @@ End Function
 Function RotatePlayerImage()
 	RotateImage playerImage, prevPlayerRotation - currPlayerRotation
 End Function
-
 
